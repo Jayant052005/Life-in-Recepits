@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Your Life, In Receipts — Digital Storytelling &amp; Insights</title>
+  <meta name="description" content="Transform a dataset of digital life receipts into an interactive, visual, and gamified narrative story. Discover hidden connections and identity insights.">
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&amp;family=Space+Grotesk:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- Leaflet CSS & JS for Interactive Geo Map -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <!-- Canvas Confetti CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+  <!-- Custom Styles -->
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body class="dark-theme">
+  <div id="app">
+    <!-- Glassmorphic Header & Navigation -->
+    <header class="app-header">
+      <div class="header-left">
+        <div class="logo-mark">
+          <i data-lucide="receipt"></i>
+        </div>
+        <div class="brand-text">
+          <h1>Life in Receipts</h1>
+          <span class="sub-badge">Digital Storytelling</span>
+        </div>
+      </div>
+
+      <!-- Quick Global Search Bar -->
+      <div class="header-search">
+        <i data-lucide="search" class="search-icon"></i>
+        <input type="text" id="globalSearchInput" placeholder="Search songs, places, notes, friends, or cities... (Press '/' to focus)">
+        <span class="search-shortcut">/</span>
+      </div>
+
+      <div class="header-right">
+        <button type="button" id="addReceiptBtn" class="btn btn-secondary btn-sm" title="Add Custom Receipt">
+          <i data-lucide="plus-circle"></i>
+          <span>Add Receipt</span>
+        </button>
+        <button type="button" id="statsQuickToggle" class="btn btn-outline btn-sm">
+          <i data-lucide="sparkles"></i>
+          <span id="receiptsCountBadge">311 Moments</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Navigation Bar -->
+    <nav class="main-nav">
+      <button type="button" class="nav-tab active" data-tab="story">
+        <i data-lucide="book-open"></i>
+        <span>Story Chapters</span>
+      </button>
+      <button type="button" class="nav-tab" data-tab="graph">
+        <i data-lucide="share-2"></i>
+        <span>Web of Life</span>
+      </button>
+      <button type="button" class="nav-tab" data-tab="persona">
+        <i data-lucide="pie-chart"></i>
+        <span>Persona Insights</span>
+      </button>
+      <button type="button" class="nav-tab" data-tab="quests">
+        <i data-lucide="trophy"></i>
+        <span>Story Quests</span>
+        <span class="quest-count-badge" id="questBadge">4</span>
+      </button>
+      <button type="button" class="nav-tab" data-tab="explorer">
+        <i data-lucide="grid"></i>
+        <span>Receipts Explorer</span>
+      </button>
+    </nav>
+
+    <!-- Hero Story Context Strip -->
+    <div class="story-context-banner">
+      <div class="banner-content">
+        <div class="user-avatar-glow">
+          <span>AL</span>
+        </div>
+        <div class="user-bio">
+          <h2>Alex's 2026 Digital Timeline</h2>
+          <p>311 Connected Receipts &bull; Jan 13 – May 13, 2026 &bull; 5 Cities &bull; 9 Categories</p>
+        </div>
+      </div>
+      <div class="banner-actions">
+        <div class="city-chips">
+          <span class="chip active" data-city="all">All Cities</span>
+          <span class="chip" data-city="Mumbai">Mumbai</span>
+          <span class="chip" data-city="Bengaluru">Bengaluru</span>
+          <span class="chip" data-city="Pune">Pune</span>
+          <span class="chip" data-city="Jamshedpur">Jamshedpur</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- MAIN VIEW CONTAINERS -->
+    <main class="main-content">
+
+      <!-- VIEW 1: STORY CHAPTERS (NARRATIVE JOURNEY) -->
+      <section id="view-story" class="tab-view active">
+        <div class="story-layout">
+          <!-- Sidebar Chapter Index -->
+          <aside class="chapter-sidebar">
+            <h3 class="sidebar-title">
+              <i data-lucide="compass"></i> Life Chapters
+            </h3>
+            <div class="chapter-list" id="chapterListContainer">
+              <!-- Dynamically Populated -->
+            </div>
+
+            <div class="chapter-player-card">
+              <h4>Auto Narrative Player</h4>
+              <p>Experience the story automatically step by step.</p>
+
+              <div class="player-controls">
+                <button type="button" id="prevChapterBtn" class="btn btn-icon" aria-label="Previous Chapter"><i data-lucide="skip-back"></i></button>
+                <button type="button" id="playChapterBtn" class="btn btn-primary btn-icon" aria-label="Play Chapters"><i data-lucide="play"></i></button>
+                <button type="button" id="nextChapterBtn" class="btn btn-icon" aria-label="Next Chapter"><i data-lucide="skip-forward"></i></button>
+              </div>
+            </div>
+          </aside>
+
+          <!-- Chapter Detail Display -->
+          <div class="chapter-narrative-main">
+            <div id="chapterHeroCard" class="chapter-hero">
+              <!-- Dynamically Populated -->
+            </div>
+
+            <div class="timeline-header">
+              <h3><i data-lucide="clock"></i> Connected Moments in this Chapter</h3>
+              <span id="chapterMomentCount" class="badge">0 Moments</span>
+            </div>
+
+            <!-- Chapter Receipts Timeline Stream -->
+            <div class="timeline-stream" id="chapterTimelineContainer">
+              <!-- Dynamically Populated -->
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- VIEW 2: WEB OF LIFE (RELATIONSHIP GRAPH) -->
+      <section id="view-graph" class="tab-view">
+        <div class="graph-layout">
+          <div class="graph-toolbar">
+            <div class="tool-group">
+              <label>Connect By:</label>
+              <select id="graphLinkCriterion">
+                <option value="all">Date, City &amp; Companion (Rich Web)</option>
+                <option value="date">Exact Same Date</option>
+                <option value="companion">Shared Companion / Friends</option>
+                <option value="city">Shared City Context</option>
+                <option value="mood">Shared Mood &amp; Emotion</option>
+              </select>
+            </div>
+
+            <div class="tool-group">
+              <label>Focus Category:</label>
+              <select id="graphCategoryFilter">
+                <option value="all">All 9 Categories</option>
+                <option value="Music">Music</option>
+                <option value="Movies &amp; Entertainment">Movies &amp; Entertainment</option>
+                <option value="Places">Places</option>
+                <option value="Purchases">Purchases</option>
+                <option value="Photos">Photos</option>
+                <option value="Messages">Messages</option>
+                <option value="Events">Events</option>
+                <option value="Personal Notes">Personal Notes</option>
+              </select>
+            </div>
+
+            <div class="tool-group">
+              <button type="button" id="toggle3dBtn" class="btn btn-primary btn-sm">
+                <i data-lucide="box"></i> <span id="dimensionModeLabel">3D Galaxy Orbit</span>
+              </button>
+              <button type="button" id="resetGraphBtn" class="btn btn-secondary btn-sm">
+                <i data-lucide="refresh-cw"></i> Reset View
+              </button>
+            </div>
+          </div>
+
+          <div class="graph-container">
+            <canvas id="graphCanvas"></canvas>
+
+            <!-- Graph Legend -->
+            <div class="graph-legend">
+              <span class="legend-item"><span class="dot dot-music"></span> Music</span>
+              <span class="legend-item"><span class="dot dot-movies"></span> Movies</span>
+              <span class="legend-item"><span class="dot dot-places"></span> Places</span>
+              <span class="legend-item"><span class="dot dot-purchases"></span> Purchases</span>
+              <span class="legend-item"><span class="dot dot-photos"></span> Photos</span>
+              <span class="legend-item"><span class="dot dot-messages"></span> Messages</span>
+              <span class="legend-item"><span class="dot dot-events"></span> Events</span>
+              <span class="legend-item"><span class="dot dot-notes"></span> Notes</span>
+            </div>
+
+            <div id="graphNodeDetails" class="graph-side-panel">
+              <div class="panel-placeholder">
+                <i data-lucide="pointer" class="big-icon"></i>
+                <p>Click any node in the graph to inspect its details and connected receipt web!</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- VIEW 3: PERSONA INSIGHTS & ANALYTICS -->
+      <section id="view-persona" class="tab-view">
+        <div class="persona-dashboard">
+          <div class="persona-header">
+            <div class="persona-card-main">
+              <div class="persona-badge">DIGITAL PERSONA</div>
+              <h2>"The Explorer &amp; Culture Enthusiast"</h2>
+              <p>Based on 311 digital receipts from Jan to May 2026. You are an active urban traveler, movie buff, indie music listener, and cafe romantic.</p>
+
+              <div class="traits-grid">
+                <div class="trait-box">
+                  <i data-lucide="heart"></i>
+                  <span>Top Emotion: <strong>Hopeful &amp; Curious</strong></span>
+                </div>
+                <div class="trait-box">
+                  <i data-lucide="map-pin"></i>
+                  <span>Primary Hub: <strong>Mumbai &amp; Pune</strong></span>
+                </div>
+                <div class="trait-box">
+                  <i data-lucide="users"></i>
+                  <span>Key Companions: <strong>Maya, Aarav, Rohan</strong></span>
+                </div>
+                <div class="trait-box">
+                  <i data-lucide="music"></i>
+                  <span>Favorite Vibe: <strong>Indie &amp; Acoustic 2AM</strong></span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Chart Grid -->
+          <div class="charts-grid">
+            <div class="chart-card">
+              <h3><i data-lucide="pie-chart"></i> Activity Category Breakdown</h3>
+              <div class="chart-wrapper">
+                <canvas id="chartCategories"></canvas>
+              </div>
+            </div>
+
+            <div class="chart-card">
+              <h3><i data-lucide="smile"></i> Emotional Mood Landscape</h3>
+              <div class="chart-wrapper">
+                <canvas id="chartMoods"></canvas>
+              </div>
+            </div>
+
+            <div class="chart-card">
+              <h3><i data-lucide="map"></i> City Activity &amp; Travel Distribution</h3>
+              <div class="chart-wrapper">
+                <canvas id="chartCities"></canvas>
+              </div>
+            </div>
+
+            <div class="chart-card">
+              <h3><i data-lucide="dollar-sign"></i> Spending by Category (INR)</h3>
+              <div class="chart-wrapper">
+                <canvas id="chartSpending"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- VIEW 4: STORY QUESTS (GAME MODE) -->
+      <section id="view-quests" class="tab-view">
+        <div class="quests-layout">
+          <div class="quests-header">
+            <div>
+              <h2><i data-lucide="gamepad-2"></i> Story Detective Mode</h2>
+              <p>Uncover hidden narratives, connect the dots, and validate digital receipt clues to earn achievements!</p>
+            </div>
+            <div class="quest-score-card">
+              <span class="score-label">UNLOCKED BADGES</span>
+              <span class="score-val" id="questScoreVal">0 / 4</span>
+            </div>
+          </div>
+
+          <div class="quests-grid" id="questsContainer">
+            <!-- Dynamically Populated -->
+          </div>
+        </div>
+      </section>
+
+      <!-- VIEW 5: RECEIPTS EXPLORER & MAP -->
+      <section id="view-explorer" class="tab-view">
+        <div class="explorer-layout">
+
+          <!-- Explorer Filters Bar -->
+          <div class="explorer-filter-bar">
+            <div class="filter-group">
+              <label><i data-lucide="filter"></i> Category:</label>
+              <select id="explorerCategoryFilter">
+                <option value="all">All Categories (311)</option>
+                <option value="Music">Music</option>
+                <option value="Movies &amp; Entertainment">Movies &amp; Entertainment</option>
+                <option value="Places">Places</option>
+                <option value="Purchases">Purchases</option>
+                <option value="Photos">Photos</option>
+                <option value="Messages">Messages</option>
+                <option value="Searches">Searches</option>
+                <option value="Events">Events</option>
+                <option value="Personal Notes">Personal Notes</option>
+              </select>
+            </div>
+
+            <div class="filter-group">
+              <label><i data-lucide="map-pin"></i> City:</label>
+              <select id="explorerCityFilter">
+                <option value="all">All Cities</option>
+                <option value="Mumbai">Mumbai</option>
+                <option value="Bengaluru">Bengaluru</option>
+                <option value="Pune">Pune</option>
+                <option value="Jamshedpur">Jamshedpur</option>
+                <option value="Delhi">Delhi</option>
+              </select>
+            </div>
+
+            <div class="filter-group">
+              <label><i data-lucide="smile"></i> Mood:</label>
+              <select id="explorerMoodFilter">
+                <option value="all">All Moods</option>
+                <option value="hopeful">Hopeful</option>
+                <option value="happy">Happy</option>
+                <option value="curious">Curious</option>
+                <option value="focused">Focused</option>
+                <option value="nostalgic">Nostalgic</option>
+                <option value="calm">Calm</option>
+              </select>
+            </div>
+
+            <div class="filter-group">
+              <label><i data-lucide="users"></i> Companion:</label>
+              <select id="explorerCompanionFilter">
+                <option value="all">Anyone</option>
+                <option value="Maya">Maya</option>
+                <option value="Aarav">Aarav</option>
+                <option value="Rohan">Rohan</option>
+                <option value="Priya">Priya</option>
+                <option value="Neha">Neha</option>
+              </select>
+            </div>
+
+            <div class="filter-group">
+              <button type="button" id="toggleMapBtn" class="btn btn-secondary btn-sm">
+                <i data-lucide="map"></i> <span id="mapToggleLabel">Hide Map</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Interactive Leaflet Map Container -->
+          <div id="explorerMapContainer" class="explorer-map-box">
+            <div id="leafletMap"></div>
+          </div>
+
+          <!-- Receipts Ticket Grid -->
+          <div class="receipts-grid-header">
+            <h3>Matching Digital Receipts (<span id="explorerCount">311</span>)</h3>
+          </div>
+
+          <div class="receipts-grid" id="receiptsGridContainer">
+            <!-- Dynamically Populated -->
+          </div>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- RECEIPT DETAIL MODAL -->
+    <div id="receiptModal" class="modal-backdrop">
+      <div class="modal-card">
+        <button type="button" class="modal-close" id="closeReceiptModal" aria-label="Close modal">&times;</button>
+        <div id="modalContent">
+          <!-- Dynamically Populated -->
+        </div>
+      </div>
+    </div>
+
+    <!-- ADD CUSTOM RECEIPT MODAL -->
+    <div id="addReceiptModal" class="modal-backdrop">
+      <div class="modal-card modal-card-sm">
+        <button type="button" class="modal-close" id="closeAddReceiptModal" aria-label="Close modal">&times;</button>
+        <div class="modal-header">
+          <h3><i data-lucide="plus-circle"></i> Add Custom Life Receipt</h3>
+          <p>Add a new memory to your 2026 digital tapestry!</p>
+        </div>
+        <form id="addReceiptForm" class="receipt-form">
+          <div class="form-group">
+            <label>Category</label>
+            <select id="newCategory" required>
+              <option value="Music">Music</option>
+              <option value="Movies &amp; Entertainment">Movies &amp; Entertainment</option>
+              <option value="Places">Places</option>
+              <option value="Purchases">Purchases</option>
+              <option value="Photos">Photos</option>
+              <option value="Messages">Messages</option>
+              <option value="Personal Notes">Personal Notes</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Title / Item / Song / Event</label>
+            <input type="text" id="newTitle" placeholder="e.g. Acoustic Coffee Session" required>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>City</label>
+              <input type="text" id="newCity" placeholder="e.g. Mumbai" value="Mumbai" required>
+            </div>
+            <div class="form-group">
+              <label>Date</label>
+              <input type="date" id="newDate" value="2026-04-15" required>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Details / Note / Message</label>
+            <textarea id="newDetail" rows="2" placeholder="Write details about this moment..."></textarea>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Mood</label>
+              <select id="newMood">
+                <option value="happy">Happy</option>
+                <option value="hopeful">Hopeful</option>
+                <option value="curious">Curious</option>
+                <option value="focused">Focused</option>
+                <option value="nostalgic">Nostalgic</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Companions (comma separated)</label>
+              <input type="text" id="newCompanions" placeholder="e.g. Maya, Rohan">
+            </div>
+          </div>
+          <div class="form-actions">
+            <button type="submit" class="btn btn-primary btn-block">Add to Receipts Timeline</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="app-footer">
+      <p>&copy; 2026 "Your Life, In Receipts" — Crafted with passion for Digital Life Hackathon.</p>
+    </footer>
+
+  </div>
+
+  <!-- JavaScript Modules -->
+  <script src="js/data.js"></script>
+  <script src="js/components/story.js"></script>
+  <script src="js/components/graph.js"></script>
+  <script src="js/components/persona.js"></script>
+  <script src="js/components/quests.js"></script>
+  <script src="js/components/explorer.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
